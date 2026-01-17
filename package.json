@@ -1,13 +1,21 @@
 {
   "name": "milo-web",
-  "private": true,
+  "version": "1.0.0",
+  "description": "To install dependencies:",
+  "homepage": "https://github.com/fadilsflow/milo-bun-html#readme",
+  "bugs": {
+    "url": "https://github.com/fadilsflow/milo-bun-html/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fadilsflow/milo-bun-html.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "server.js",
   "scripts": {
-    "dev": "bun server.js"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   }
 }
