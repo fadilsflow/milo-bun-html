@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toko Susu Milo Online</title>
+
+    <style>
+        /* ================= STYLE ASLI KAMU ================= */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #4a7c2c;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        nav {
+            background-color: #3a6421;
+            text-align: center;
+            padding: 10px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        .product {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 15px;
+            width: 260px;
+            text-align: center;
+            padding: 15px;
+            transition: transform 0.2s;
+        }
+
+        .product:hover {
+            transform: scale(1.05);
+        }
+
+        .product img {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+        }
+
+        .product h3 {
+            color: #333;
+        }
+
+        .price {
+            color: #4a7c2c;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #4a7c2c;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #3a6421;
+        }
+
+        footer {
+            background-color: #4a7c2c;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        /* ================= TAMBAHAN AGAR USEFUL ================= */
+        .user-bar {
+            background: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .auth-box {
+            background: white;
+            width: 300px;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+        }
+
+        .auth-box input {
+            width: 90%;
+            padding: 8px;
+            margin: 5px 0;
+        }
+
+        .auth-box button {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>CHOCO MILO STUDIO</h1>
+        <p>Karena setiap rasa hangat, selalu dimulai dari milo!!!</p>
+    </header>
+
+    <nav>
+        <a href="#" onclick="showHome()">Beranda</a>
+        <a href="#" onclick="showLogin()">Login</a>
+        <a href="#" onclick="showRegister()">Register</a>
+    </nav>
+
+    <div class="user-bar" id="userInfo">Belum login</div>
+
+    <!-- ============ PRODUK ============ -->
+    <div class="container" id="productList"></div>
+
+    <!-- ============ LOGIN ============ -->
+    <div class="auth-box hidden" id="loginBox">
+        <h3>Login</h3>
+        <input id="loginUser" placeholder="Username">
+        <input id="loginPass" type="password" placeholder="Password">
+        <button class="btn" onclick="login()">Login</button>
+    </div>
+
+    <!-- ============ REGISTER ============ -->
+    <div class="auth-box hidden" id="registerBox">
+        <h3>Register</h3>
+        <input id="regUser" placeholder="Username">
+        <input id="regPass" placeholder="Password">
+        <button class="btn" onclick="register()">Daftar</button>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Toko Susu Milo Online | Nikmati Energi Setiap Hari!</p>
+    </footer>
+
+    <script>
+        let user = JSON.parse(localStorage.getItem("user"));
+
+        function updateUserInfo() {
+            document.getElementById("userInfo").innerText =
+                user ? "Login sebagai: " + user.username : "Belum login";
+        }
+        updateUserInfo();
+
+        function showHome() {
+            document.getElementById("productList").style.display = "flex";
+            loginBox.classList.add("hidden");
+            registerBox.classList.add("hidden");
+        }
+        function showLogin() {
+            productList.style.display = "none";
+            loginBox.classList.remove("hidden");
+            registerBox.classList.add("hidden");
+        }
+        function showRegister() {
+            productList.style.display = "none";
+            loginBox.classList.add("hidden");
+            registerBox.classList.remove("hidden");
+        }
+
+        /* LOAD PRODUK DARI BACKEND */
+        fetch("/api/products")
+            .then(r => r.json())
+            .then(data => {
+                productList.innerHTML = data.map(p => `
+    <div class="product">
+      <img src="${p.image}">
+      <h3>${p.name}</h3>
+      <p>${p.description}</p>
+      <p class="price">Rp ${p.price}</p>
+      <a class="btn" onclick="buy(${p.id})">Beli Sekarang</a>
+    </div>
+  `).join("");
+            });
+
+        /* LOGIN */
+        function login() {
+            fetch("/api/login", {
+                method: "POST",
+                body: JSON.stringify({
+                    username: loginUser.value,
+                    password: loginPass.value
+                })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        user = d.user;
+                        localStorage.setItem("user", JSON.stringify(user));
+                        updateUserInfo();
+                        showHome();
+                    } else alert("Login gagal");
+                });
+        }
+
+        /* REGISTER */
+        function register() {
+            fetch("/api/register", {
+                method: "POST",
+                body: JSON.stringify({
+                    username: regUser.value,
+                    password: regPass.value
+                })
+            }).then(() => alert("Register berhasil"));
+        }
+
+        /* CHECKOUT */
+        function buy(productId) {
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            if (!user) {
+                alert("Login dulu");
+                return;
+            }
+
+            fetch("http://localhost:3000/api/checkout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    user_id: user.id,
+                    product_id: productId,
+                    qty: 1
+                })
+            })
+                .then(res => res.text()) // ⬅️ PENTING UNTUK DEBUG
+                .then(text => {
+                    console.log("RESPON:", text);
+                    alert(text);
+                })
+                .catch(err => {
+                    console.error("FETCH ERROR", err);
+                });
+        }
+    </script>
+
+</body>
+
+</html>

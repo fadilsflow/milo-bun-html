@@ -1,0 +1,12 @@
+<input id="u" placeholder="Username">
+<input id="p" placeholder="Password">
+<button onclick="reg()">Register</button>
+
+<script>
+    function reg() {
+        fetch('/api/register', {
+            method: 'POST',
+            body: JSON.stringify({ username: u.value, password: p.value })
+        }).then(() => alert('Berhasil'));
+    }
+</script>

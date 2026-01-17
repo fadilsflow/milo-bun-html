@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel – Choco Milo Studio</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+        }
+
+        header {
+            background: #4a7c2c;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        nav {
+            background: #3a6421;
+            text-align: center;
+            padding: 10px;
+        }
+
+        nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1200px;
+            background: white;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h2 {
+            color: #4a7c2c;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        .btn {
+            background: #4a7c2c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #3a6421;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #4a7c2c;
+            color: white;
+            padding: 10px;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        footer {
+            background: #4a7c2c;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>ADMIN PANEL</h1>
+        <p>Choco Milo Studio</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Beranda</a>
+        <a href="admin.html">Admin</a>
+    </nav>
+
+    <div class="container">
+
+        <!-- ===== CRUD PRODUK ===== -->
+        <h2>Manajemen Produk</h2>
+
+        <input id="pid" type="hidden">
+        <input id="pname" placeholder="Nama Produk">
+        <input id="pdesc" placeholder="Deskripsi">
+        <input id="pprice" placeholder="Harga">
+        <input id="pimg" placeholder="Nama Gambar">
+        <button class="btn" onclick="saveProduct()">Simpan</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama</th>
+                    <th>Harga</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="productTable"></tbody>
+        </table>
+
+        <hr>
+
+        <!-- ===== MANAGE ORDER ===== -->
+        <h2>Manajemen Pesanan</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Produk</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="orderTable"></tbody>
+        </table>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Choco Milo Studio</p>
+    </footer>
+
+    <script>
+        /* ===== LOAD PRODUK ===== */
+        function loadProducts() {
+            fetch('/api/products')
+                .then(r => r.json())
+                .then(d => {
+                    productTable.innerHTML = d.map(p => `
+  <tr>
+    <td>${p.id}</td>
+    <td>${p.name}</td>
+    <td>Rp ${p.price}</td>
+    <td>
+      <button class="btn" onclick='edit(${JSON.stringify(p)})'>Edit</button>
+      <button class="btn" onclick='del(${p.id})'>Hapus</button>
+    </td>
+  </tr>
+ `).join('');
+                });
+        }
+        loadProducts();
+
+        /* ===== SAVE / UPDATE ===== */
+        function saveProduct() {
+            fetch('/api/' + (pid.value ? 'update-product' : 'add-product'), {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: pid.value,
+                    name: pname.value,
+                    description: pdesc.value,
+                    price: pprice.value,
+                    image: pimg.value
+                })
+            }).then(() => {
+                pid.value = "";
+                pname.value = pdesc.value = pprice.value = pimg.value = "";
+                loadProducts();
+            });
+        }
+
+        /* ===== EDIT ===== */
+        function edit(p) {
+            pid.value = p.id;
+            pname.value = p.name;
+            pdesc.value = p.description;
+            pprice.value = p.price;
+            pimg.value = p.image;
+        }
+
+        /* ===== DELETE ===== */
+        function del(id) {
+            if (confirm("Hapus produk?")) {
+                fetch('/api/delete-product', {
+                    method: 'POST',
+                    body: JSON.stringify({ id })
+                }).then(loadProducts);
+            }
+        }
+
+        /* ===== LOAD ORDER ===== */
+        fetch('/api/orders')
+            .then(r => r.json())
+            .then(d => {
+                orderTable.innerHTML = d.map(o => `
+ <tr>
+  <td>${o.id}</td>
+  <td>${o.username}</td>
+  <td>${o.name}</td>
+  <td>${o.qty}</td>
+  <td>Rp ${o.total}</td>
+  <td>
+   <select onchange="updateStatus(${o.id}, this.value)">
+        <option value="Diproses" ${o.status == "Diproses" ? "selected" : ""}>Diproses</option>
+        <option value="Dikirim" ${o.status == "Dikirim" ? "selected" : ""}>Dikirim</option>
+        <option value="Selesai" ${o.status == "Selesai" ? "selected" : ""}>Selesai</option>
+    </select>
+  </td>
+  <td>✔</td>
+ </tr>
+ `).join('');
+            });
+
+        /* ===== UPDATE STATUS ===== */
+        function updateStatus(id, status) {
+            fetch("/api/update-order-status", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ id, status })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (!d.success) {
+                        alert("Gagal update status");
+                    }
+                });
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,33 @@
+<script>
+function buy(productId) {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (!user) {
+    alert("Login dulu");
+    return;
+  }
+
+  fetch("http://localhost:3000/api/checkout", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      user_id: user.id,
+      product_id: productId,
+      qty: 1
+    })
+  })
+  .then(res => res.text()) // ⬅️ PENTING UNTUK DEBUG
+  .then(text => {
+    console.log("RESPON:", text);
+    alert(text);
+  })
+  .catch(err => {
+    console.error("FETCH ERROR", err);
+  });
+}
+</script>
+
+
+<button onclick="checkout()">Checkout</button>
