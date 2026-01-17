@@ -216,6 +216,9 @@
         function login() {
             fetch("/api/login", {
                 method: "POST",
+                headers: {
+                    "Content-Type": "application/json"   // ⬅️ WAJIB
+                },
                 body: JSON.stringify({
                     username: loginUser.value,
                     password: loginPass.value
@@ -228,19 +231,31 @@
                         localStorage.setItem("user", JSON.stringify(user));
                         updateUserInfo();
                         showHome();
-                    } else alert("Login gagal");
+                    } else {
+                        alert("Login gagal");
+                    }
                 });
         }
-
         /* REGISTER */
         function register() {
             fetch("/api/register", {
                 method: "POST",
+                headers: {
+                    "Content-Type": "application/json"   // ⬅️ WAJIB
+                },
                 body: JSON.stringify({
                     username: regUser.value,
                     password: regPass.value
                 })
-            }).then(() => alert("Register berhasil"));
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        alert("Register berhasil");
+                    } else {
+                        alert("Username sudah ada");
+                    }
+                });
         }
 
         /* CHECKOUT */

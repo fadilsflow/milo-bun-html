@@ -159,21 +159,24 @@
 
     <script>
         /* ===== LOAD PRODUK ===== */
+        let productData = [];
+
         function loadProducts() {
             fetch('/api/products')
                 .then(r => r.json())
                 .then(d => {
-                    productTable.innerHTML = d.map(p => `
-  <tr>
+                    productData = d;
+                    productTable.innerHTML = d.map((p, i) => `
+<tr>
     <td>${p.id}</td>
     <td>${p.name}</td>
     <td>Rp ${p.price}</td>
     <td>
-      <button class="btn" onclick='edit(${JSON.stringify(p)})'>Edit</button>
-      <button class="btn" onclick='del(${p.id})'>Hapus</button>
+        <button class="btn" onclick="edit(${i})">Edit</button>
+        <button class="btn" onclick="del(${p.id})">Hapus</button>
     </td>
-  </tr>
- `).join('');
+</tr>
+`).join('');
                 });
         }
         loadProducts();
@@ -182,6 +185,9 @@
         function saveProduct() {
             fetch('/api/' + (pid.value ? 'update-product' : 'add-product'), {
                 method: 'POST',
+                headers: {
+                    "Content-Type": "application/json"   // ⬅️ WAJIB
+                },
                 body: JSON.stringify({
                     id: pid.value,
                     name: pname.value,
@@ -189,15 +195,22 @@
                     price: pprice.value,
                     image: pimg.value
                 })
-            }).then(() => {
-                pid.value = "";
-                pname.value = pdesc.value = pprice.value = pimg.value = "";
-                loadProducts();
-            });
+            })
+                .then(r => r.json())
+                .then(d => {
+                    alert(pid.value ? "Produk diperbarui" : "Produk ditambahkan");
+                    pid.value = "";
+                    pname.value = "";
+                    pdesc.value = "";
+                    pprice.value = "";
+                    pimg.value = "";
+                    loadProducts();
+                });
         }
 
         /* ===== EDIT ===== */
-        function edit(p) {
+        function edit(index) {
+            const p = productData[index];
             pid.value = p.id;
             pname.value = p.name;
             pdesc.value = p.description;
@@ -207,14 +220,23 @@
 
         /* ===== DELETE ===== */
         function del(id) {
-            if (confirm("Hapus produk?")) {
+            if (confirm("Hapus produk ini?")) {
                 fetch('/api/delete-product', {
                     method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json"   // ⬅️ WAJIB
+                    },
                     body: JSON.stringify({ id })
-                }).then(loadProducts);
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.success) {
+                            alert("Produk dihapus");
+                            loadProducts();
+                        }
+                    });
             }
         }
-
         /* ===== LOAD ORDER ===== */
         fetch('/api/orders')
             .then(r => r.json())

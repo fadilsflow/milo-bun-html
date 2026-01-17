@@ -1,20 +1,30 @@
 <h2>Login</h2>
 <input id="u" placeholder="Username"><br>
 <input id="p" type="password" placeholder="Password"><br>
-<button onclick="login()">Login</button>
+<button id="btn">Login</button>
 
 <script>
-    function login() {
-        fetch('/api/login', {
-            method: 'POST',
-            body: JSON.stringify({ username: u.value, password: p.value })
-        })
-            .then(r => r.json())
-            .then(d => {
-                if (d.success) {
-                    localStorage.setItem("user", JSON.stringify(d.user));
-                    location.href = "index.html";
-                } else alert("Login gagal");
-            });
-    }
+document.getElementById("btn").onclick = function () {
+    const data = new URLSearchParams();
+    data.append("username", document.getElementById("u").value);
+    data.append("password", document.getElementById("p").value);
+
+    fetch("/api/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: data.toString()
+    })
+    .then(res => res.json())
+    .then(d => {
+        console.log(d);
+        if (d.success) {
+            localStorage.setItem("user", JSON.stringify(d.user));
+            location.href = "index.html";
+        } else {
+            alert("Login gagal");
+        }
+    });
+};
 </script>
